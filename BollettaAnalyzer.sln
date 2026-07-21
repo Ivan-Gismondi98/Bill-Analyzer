@@ -1,0 +1,57 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{0F942D88-FC5E-493A-9504-9207A8F61AB7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{327291FF-1AA0-4C28-B112-28E6A0B4F3CA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BollettaAnalyzer.Domain", "src\Backend\BollettaAnalyzer.Domain\BollettaAnalyzer.Domain.csproj", "{8C4EDA8F-2CBE-4876-9147-144A753A4160}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BollettaAnalyzer.Application", "src\Backend\BollettaAnalyzer.Application\BollettaAnalyzer.Application.csproj", "{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BollettaAnalyzer.Infrastructure", "src\Backend\BollettaAnalyzer.Infrastructure\BollettaAnalyzer.Infrastructure.csproj", "{EA4C54F0-8357-4605-B4D9-4704608B861A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BollettaAnalyzer.Api", "src\Backend\BollettaAnalyzer.Api\BollettaAnalyzer.Api.csproj", "{667D12F7-6CAB-4585-A7E1-FF13C73717C2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BollettaAnalyzer.Maui", "src\Frontend\BollettaAnalyzer.Maui\BollettaAnalyzer.Maui.csproj", "{49783E07-3F11-4BCD-9BC5-176F9E04D31D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C4EDA8F-2CBE-4876-9147-144A753A4160}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C4EDA8F-2CBE-4876-9147-144A753A4160}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C4EDA8F-2CBE-4876-9147-144A753A4160}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C4EDA8F-2CBE-4876-9147-144A753A4160}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA4C54F0-8357-4605-B4D9-4704608B861A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA4C54F0-8357-4605-B4D9-4704608B861A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA4C54F0-8357-4605-B4D9-4704608B861A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA4C54F0-8357-4605-B4D9-4704608B861A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{667D12F7-6CAB-4585-A7E1-FF13C73717C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{667D12F7-6CAB-4585-A7E1-FF13C73717C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{667D12F7-6CAB-4585-A7E1-FF13C73717C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{667D12F7-6CAB-4585-A7E1-FF13C73717C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49783E07-3F11-4BCD-9BC5-176F9E04D31D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49783E07-3F11-4BCD-9BC5-176F9E04D31D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49783E07-3F11-4BCD-9BC5-176F9E04D31D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49783E07-3F11-4BCD-9BC5-176F9E04D31D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C4EDA8F-2CBE-4876-9147-144A753A4160} = {0F942D88-FC5E-493A-9504-9207A8F61AB7}
+		{CFC6E4A0-6908-4248-A7EF-B9A41D383CEE} = {0F942D88-FC5E-493A-9504-9207A8F61AB7}
+		{EA4C54F0-8357-4605-B4D9-4704608B861A} = {0F942D88-FC5E-493A-9504-9207A8F61AB7}
+		{667D12F7-6CAB-4585-A7E1-FF13C73717C2} = {0F942D88-FC5E-493A-9504-9207A8F61AB7}
+		{49783E07-3F11-4BCD-9BC5-176F9E04D31D} = {327291FF-1AA0-4C28-B112-28E6A0B4F3CA}
+	EndGlobalSection
+EndGlobal
