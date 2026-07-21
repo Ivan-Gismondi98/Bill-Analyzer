@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using BollettaAnalyzer.Application;
 using BollettaAnalyzer.Application.Common.Interfaces;
 using BollettaAnalyzer.Infrastructure;
@@ -6,24 +7,34 @@ using BollettaAnalyzer.Infrastructure.Auth;
 using BollettaAnalyzer.Infrastructure.Persistence;
 using BollettaAnalyzer.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var isDev = builder.Environment.IsDevelopment();
 
 // --- Servizi applicativi ---
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, isDev);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddProblemDetails();
 
 // --- Autenticazione JWT ---
+// La chiave DEVE essere configurata: in produzione l'app rifiuta di partire senza,
+// così un deploy dimenticato non gira mai con una chiave nota pubblicamente.
 var jwt = new JwtSettings();
 builder.Configuration.GetSection("Jwt").Bind(jwt);
 if (string.IsNullOrWhiteSpace(jwt.Key))
-    jwt.Key = "CHANGE_ME_super_secret_dev_key_min_32_chars_length!!";
+{
+    if (!isDev)
+        throw new InvalidOperationException(
+            "Jwt:Key non configurata. Impostare una chiave segreta (>= 32 caratteri) via variabile d'ambiente o secret store.");
+    jwt.Key = JwtSettings.DevOnlyKey;
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -42,13 +53,34 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
-// --- CORS per il client MAUI/React (dev) ---
+// --- Rate limiting: protegge login/registrazione da brute force ed enumerazione ---
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy("auth", ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+});
+
+// --- CORS ---
+// In sviluppo il MAUI HybridWebView usa origin custom → si accetta tutto.
+// In produzione solo la allowlist configurata (Cors:AllowedOrigins).
 const string CorsPolicy = "ClientApp";
-builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-    .SetIsOriginAllowed(_ => true)   // dev: MAUI HybridWebView usa origin custom
-    .AllowCredentials()));
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p =>
+{
+    p.AllowAnyHeader().AllowAnyMethod();
+    if (isDev)
+        p.SetIsOriginAllowed(_ => true).AllowCredentials();
+    else if (allowedOrigins.Length > 0)
+        p.WithOrigins(allowedOrigins).AllowCredentials();
+    // Nessun origin configurato in produzione → CORS resta chiuso (nessun header emesso).
+}));
 
 // --- Swagger con supporto Bearer ---
 builder.Services.AddSwaggerGen(c =>
@@ -77,22 +109,50 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// --- Migrazione + seed automatici in sviluppo ---
+// --- Schema DB ---
+// Con migrazioni presenti si usa Migrate (evolvibile); altrimenti EnsureCreated.
+// I dati demo vengono seminati SOLO in sviluppo: mai account noti in produzione.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
-    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-    await DbSeeder.SeedAsync(db, hasher);
+    if (db.Database.GetMigrations().Any())
+        await db.Database.MigrateAsync();
+    else
+        await db.Database.EnsureCreatedAsync();
+
+    if (app.Environment.IsDevelopment())
+    {
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await DbSeeder.SeedAsync(db, hasher);
+    }
 }
+
+// --- Pipeline ---
+app.UseExceptionHandler();   // errori inattesi → ProblemDetails, mai stack trace al client
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
+// Header di sicurezza di base.
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"] = "DENY";
+    ctx.Response.Headers["Referrer-Policy"] = "no-referrer";
+    await next();
+});
 
 app.UseCors(CorsPolicy);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

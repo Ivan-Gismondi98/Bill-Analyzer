@@ -1,3 +1,4 @@
+using BollettaAnalyzer.Application.Common.Exceptions;
 using BollettaAnalyzer.Application.Common.Interfaces;
 using BollettaAnalyzer.Application.DTOs;
 using BollettaAnalyzer.Application.Mapping;
@@ -70,8 +71,28 @@ public class BolletteController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == contrattoId && c.UtenteId == _currentUser.UtenteId, ct);
         if (contratto is null) return BadRequest(new { message = "Contratto non valido." });
 
-        await using var stream = file.OpenReadStream();
-        var ocr = await _ocr.EstraiDatiAsync(stream, file.FileName, ct);
+        OcrResultDto ocr;
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            ocr = await _ocr.EstraiDatiAsync(stream, file.FileName, ct);
+        }
+        catch (OcrParsingException ex)
+        {
+            // Documento illeggibile/non analizzabile: errore "di dominio", non un 500.
+            return UnprocessableEntity(new { message = ex.Message });
+        }
+
+        // Guardia di qualità: un risultato inutilizzabile non deve MAI sovrascrivere
+        // i dati della bolletta precedente. Meglio un errore chiaro che dati fasulli.
+        const decimal SogliaConfidenza = 0.35m;
+        if (ocr.ImportoTotale <= 0 || ocr.ConfidenzaMedia < SogliaConfidenza)
+            return UnprocessableEntity(new
+            {
+                message = "Non sono riuscito a leggere dati affidabili da questo documento " +
+                          $"(confidenza {ocr.ConfidenzaMedia:P0}). Prova con una foto più nitida o con il PDF originale.",
+                confidenza = ocr.ConfidenzaMedia
+            });
 
         // Conservazione "leggera": teniamo solo i dati estratti dell'ULTIMA bolletta
         // caricata per il contratto (fino al prossimo upload). Il file originale non
@@ -93,8 +114,9 @@ public class BolletteController : ControllerBase
             ConsumoF2Kwh = ocr.ConsumoF2Kwh,
             ConsumoF3Kwh = ocr.ConsumoF3Kwh,
             ConsumoSm3 = ocr.ConsumoSm3,
-            FileOriginale = file.FileName,
+            FileOriginale = Path.GetFileName(file.FileName),
             DaOcr = true,
+            ConfidenzaOcr = ocr.ConfidenzaMedia,
             VociDiCosto = ocr.VociDiCosto
                 .Select(v => new VoceDiCosto { Categoria = v.Categoria, Descrizione = v.Descrizione, Importo = v.Importo })
                 .ToList()

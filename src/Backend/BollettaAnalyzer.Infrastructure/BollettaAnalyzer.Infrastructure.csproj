@@ -23,6 +23,14 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.3.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+
+    <!-- OCR bollette reali -->
+    <!-- Estrazione testo da PDF digitali (100% gestito, nessuna dipendenza nativa). -->
+    <PackageReference Include="PdfPig" Version="0.1.9" />
+    <!-- OCR reale su immagini/scansioni. Su Linux richiede libtesseract/libleptonica + traineddata. -->
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <!-- Provider cloud opzionale per scansioni complesse. -->
+    <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

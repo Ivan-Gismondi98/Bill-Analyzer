@@ -35,6 +35,9 @@ public class Bolletta : BaseEntity
     /// <summary>Indica se i dati provengono da OCR (true) o inseriti a mano (false).</summary>
     public bool DaOcr { get; set; }
 
+    /// <summary>Confidenza media (0..1) dell'estrazione OCR; null per inserimenti manuali.</summary>
+    public decimal? ConfidenzaOcr { get; set; }
+
     // Relazioni
     public ICollection<VoceDiCosto> VociDiCosto { get; set; } = new List<VoceDiCosto>();
 }

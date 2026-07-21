@@ -63,7 +63,8 @@ public class AesFileEncryptionService : IFileEncryptionService
             return SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(configKey));
         }
 
-        // Fallback di sviluppo (NON usare in produzione).
+        // Raggiungibile solo in Development: in produzione la DI rifiuta di partire
+        // senza Encryption:Key configurata (vedi Infrastructure/DependencyInjection.cs).
         return SHA256.HashData("dev-only-encryption-key-change-me"u8.ToArray());
     }
 }

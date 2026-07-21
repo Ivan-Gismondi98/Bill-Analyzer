@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [contrattoId, setContrattoId] = useState<string>('');
   const [analisi, setAnalisi] = useState<AnalisiBolletta | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,8 +46,12 @@ export default function DashboardPage() {
   const onUpload = async (file?: File) => {
     if (!file || !contrattoId) return;
     setUploading(true);
+    setUploadError(null);
     try {
       setAnalisi(await bolletteApi.upload(contrattoId, file));
+    } catch (err: any) {
+      // 422 = documento illeggibile o dati non affidabili: il server spiega il perché.
+      setUploadError(err?.response?.data?.message ?? 'Analisi non riuscita. Riprova con un altro file.');
     } finally {
       setUploading(false);
     }
@@ -64,7 +69,14 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-500">Analisi della tua ultima bolletta</p>
+          <p className="text-sm text-slate-500">
+            Analisi della tua ultima bolletta
+            {b?.daOcr && b.confidenzaOcr != null && (
+              <span className={`chip ml-2 ${b.confidenzaOcr >= 0.7 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                OCR · confidenza {(b.confidenzaOcr * 100).toFixed(0)}% — verifica i valori
+              </span>
+            )}
+          </p>
         </div>
         <select className="input max-w-xs" value={contrattoId} onChange={(e) => setContrattoId(e.target.value)}>
           {contratti.map((c) => (
@@ -89,6 +101,12 @@ export default function DashboardPage() {
         </div>
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
       </section>
+
+      {uploadError && (
+        <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100">
+          ⚠️ {uploadError}
+        </div>
+      )}
 
       {!analisi ? (
         <div className="card text-center text-slate-400">Nessuna bolletta analizzata. Carica un documento per iniziare.</div>

@@ -25,3 +25,7 @@ src/Frontend/BollettaAnalyzer.Maui/Resources/Raw/wwwroot/*.css
 
 # MAUI publish
 *.binlog
+
+# OCR: dati lingua Tesseract (scaricabili a parte, non versionati)
+tessdata/
+*.traineddata

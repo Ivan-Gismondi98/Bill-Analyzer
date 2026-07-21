@@ -64,7 +64,7 @@ export default function AuthPage() {
             </div>
             <div>
               <label className="label">Password</label>
-              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             </div>
 
             {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
