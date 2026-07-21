@@ -1,0 +1,27 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# EF Core / SQLite local db
+*.db
+*.db-shm
+*.db-wal
+
+# Node / Vite
+node_modules/
+dist/
+*.tsbuildinfo
+.env.local
+.env.*.local
+
+# Output React buildato dentro il MAUI (rigenerato dalla build)
+src/Frontend/BollettaAnalyzer.Maui/Resources/Raw/wwwroot/assets/
+src/Frontend/BollettaAnalyzer.Maui/Resources/Raw/wwwroot/index.html
+src/Frontend/BollettaAnalyzer.Maui/Resources/Raw/wwwroot/*.js
+src/Frontend/BollettaAnalyzer.Maui/Resources/Raw/wwwroot/*.css
+
+# MAUI publish
+*.binlog
