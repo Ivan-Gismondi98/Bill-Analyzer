@@ -19,7 +19,9 @@ Api  ──►  Application  ──►  Domain
 - **Infrastructure** — dettagli tecnici:
   - `AppDbContext` + configurazioni EF Core, provider SQLite/PostgreSQL
   - Auth: `JwtTokenGenerator`, `PasswordHasher` (BCrypt), `CurrentUser`
-  - `MockBillOcrService` (sostituibile)
+  - OCR bollette (`Services/Ocr/`): `LocalBillOcrService` (PdfPig + Tesseract),
+    `AzureDocumentIntelligenceOcrService`, `MockBillOcrService`, con il parser di dominio
+    `ItalianBillParser`; provider selezionato da configurazione (`Ocr:Provider`)
   - `DbSeeder` con dati demo.
 - **Api** — controller REST sottili che orchestrano Application/Infrastructure, autenticazione
   JWT, CORS, Swagger, migrazione+seed all'avvio.
@@ -48,7 +50,27 @@ Routing con **React Router** (`HashRouter`, robusto per il caricamento da packag
 Stato di autenticazione in `AuthContext`; token JWT persistito in `localStorage` e iniettato
 via interceptor Axios.
 
+## OCR bollette
+
+Pipeline dietro `IBillOcrService`, con provider scelto da `Ocr:Provider`:
+
+1. **Estrazione testo**
+   - PDF digitali → `PdfTextExtractor` (PdfPig, 100% gestito).
+   - Immagini/foto → `TesseractOcrEngine` (OCR reale, lingua `ita`).
+   - Scansioni/documenti complessi → `AzureDocumentIntelligenceOcrService`
+     (modello `prebuilt-invoice`, gestisce anche i PDF scansionati).
+2. **Parsing di dominio** — `ItalianBillParser` è indipendente dalla sorgente e ricava con
+   euristiche/regex tarate sulle bollette italiane: importo totale, numero fattura, periodo,
+   consumi F1/F2/F3, Smc gas e voci ARERA. Calcola una **confidenza** combinando i campi
+   trovati con quella eventuale del motore OCR.
+3. **Robustezza** — documenti illeggibili sollevano `OcrParsingException`, tradotta dalla API
+   in una risposta **422** con messaggio leggibile.
+
+Requisiti runtime: per l'OCR di immagini serve la cartella `tessdata` (`ita.traineddata`) e,
+su Linux, le librerie native Tesseract/Leptonica; per il provider Azure servono endpoint e
+chiave della risorsa Document Intelligence.
+
 ## Estensioni previste
-- OCR reale (Azure Document Intelligence / Tesseract) dietro `IBillOcrService`.
+- Rasterizzazione dei PDF scansionati nel provider `Local` (es. PDFium) per l'OCR Tesseract.
 - Persistenza offline lato client (SQLite locale) e sincronizzazione.
 - Interop nativo HybridWebView per acquisizione foto bolletta.

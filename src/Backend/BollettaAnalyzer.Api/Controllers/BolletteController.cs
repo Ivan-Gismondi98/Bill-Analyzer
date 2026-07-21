@@ -1,3 +1,4 @@
+using BollettaAnalyzer.Application.Common.Exceptions;
 using BollettaAnalyzer.Application.Common.Interfaces;
 using BollettaAnalyzer.Application.DTOs;
 using BollettaAnalyzer.Application.Mapping;
@@ -70,8 +71,17 @@ public class BolletteController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == contrattoId && c.UtenteId == _currentUser.UtenteId, ct);
         if (contratto is null) return BadRequest(new { message = "Contratto non valido." });
 
-        await using var stream = file.OpenReadStream();
-        var ocr = await _ocr.EstraiDatiAsync(stream, file.FileName, ct);
+        OcrResultDto ocr;
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            ocr = await _ocr.EstraiDatiAsync(stream, file.FileName, ct);
+        }
+        catch (OcrParsingException ex)
+        {
+            // Documento illeggibile/non analizzabile: errore "di dominio", non un 500.
+            return UnprocessableEntity(new { message = ex.Message });
+        }
 
         // Conservazione "leggera": teniamo solo i dati estratti dell'ULTIMA bolletta
         // caricata per il contratto (fino al prossimo upload). Il file originale non

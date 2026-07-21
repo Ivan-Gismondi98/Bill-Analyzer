@@ -17,7 +17,7 @@ bolletta-analyzer/
 │  ├─ Backend/                         # ASP.NET Core Web API — Clean Architecture
 │  │  ├─ BollettaAnalyzer.Domain/          # Entità di dominio + enum (nessuna dipendenza)
 │  │  ├─ BollettaAnalyzer.Application/     # DTO, interfacce, servizi di dominio (suggerimenti, simulazione)
-│  │  ├─ BollettaAnalyzer.Infrastructure/  # EF Core (SQLite/PostgreSQL), Auth JWT, OCR mock, seed
+│  │  ├─ BollettaAnalyzer.Infrastructure/  # EF Core (SQLite/PostgreSQL), Auth JWT, OCR reale, seed
 │  │  └─ BollettaAnalyzer.Api/             # Controller REST, Program.cs, Swagger, CORS
 │  └─ Frontend/
 │     └─ BollettaAnalyzer.Maui/         # Host MAUI (HybridWebView) per Android/iOS/macOS/Windows
@@ -31,7 +31,7 @@ bolletta-analyzer/
 | Backend   | ASP.NET Core Web API .NET 9 — Clean Architecture (Domain/Application/Infrastructure/Api) |
 | Database  | SQLite (default, offline) o PostgreSQL/SQL Server via EF Core (switch da configurazione) |
 | Auth      | JWT Bearer + hashing password BCrypt |
-| OCR       | `IBillOcrService` con implementazione mock, pronta per Azure Document Intelligence / Tesseract |
+| OCR       | `IBillOcrService` reale: PdfPig + Tesseract (`Local`) o Azure Document Intelligence (`Azure`), con parser bollette ARERA |
 
 ---
 
@@ -124,9 +124,36 @@ In `appsettings.json`:
 - **Auto-letture**: storico a scorrimento delle **ultime 3** letture per contratto;
   le più vecchie vengono rimosse automaticamente.
 
-## 🧾 OCR bollette
-`MockBillOcrService` restituisce dati plausibili senza analizzare il file.
-Per l'integrazione reale, implementa `IBillOcrService` (Azure Document Intelligence o
-Tesseract) e registralo in `Infrastructure/DependencyInjection.cs`.
+## 🧾 OCR bollette (reale)
+L'analisi delle bollette è implementata con una pipeline **a provider selezionabili**
+tramite la sezione `Ocr` di `appsettings.json` (`Ocr:Provider`):
+
+| Provider | Come funziona | Quando usarlo |
+|----------|---------------|---------------|
+| **`Local`** (default) | PDF digitali → estrazione testo con **PdfPig**; immagini/foto → OCR reale con **Tesseract**; il testo viene poi analizzato da `ItalianBillParser` | Nessun servizio cloud; i PDF elettronici funzionano out-of-the-box |
+| **`Azure`** | **Azure AI Document Intelligence** (`prebuilt-invoice`) per OCR robusto anche su scansioni, arricchito dal parser di dominio | Scansioni/foto complesse, massima accuratezza |
+| **`Mock`** | dati fittizi, nessuna analisi | Demo/sviluppo senza dipendenze |
+
+Il **parser italiano** (`ItalianBillParser`) è indipendente dalla sorgente OCR ed estrae:
+importo totale, numero fattura, periodo di competenza, consumi per fascia **F1/F2/F3**,
+consumo gas in **Smc** e le **voci di costo ARERA** (materia energia, trasporto e gestione,
+oneri di sistema, imposte/IVA), con una **confidenza** calcolata sui campi trovati.
+
+Configurazione:
+
+```jsonc
+"Ocr": {
+  "Provider": "Local",            // Local | Azure | Mock
+  "MinPdfTextLength": 40,
+  "Tesseract": { "DataPath": "./tessdata", "Language": "ita" },
+  "Azure": { "Endpoint": "", "ApiKey": "", "ModelId": "prebuilt-invoice" }
+}
+```
+
+- **Local + immagini**: serve la cartella `tessdata` con `ita.traineddata`
+  ([download langdata](https://github.com/tesseract-ocr/tessdata)). Su Linux installa anche
+  le librerie native (`apt install libtesseract-dev libleptonica-dev`).
+- **Azure**: imposta `Endpoint` e `ApiKey` (preferibilmente via secret/variabile d'ambiente).
+- I documenti illeggibili restituiscono **422** con un messaggio chiaro (non un 500).
 
 Vedi [`docs/ARCHITETTURA.md`](docs/ARCHITETTURA.md) per i dettagli.

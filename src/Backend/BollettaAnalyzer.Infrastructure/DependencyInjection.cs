@@ -2,6 +2,7 @@ using BollettaAnalyzer.Application.Common.Interfaces;
 using BollettaAnalyzer.Infrastructure.Auth;
 using BollettaAnalyzer.Infrastructure.Persistence;
 using BollettaAnalyzer.Infrastructure.Services;
+using BollettaAnalyzer.Infrastructure.Services.Ocr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,8 +44,31 @@ public static class DependencyInjection
         services.AddSingleton(encryption);
         services.AddSingleton<IFileEncryptionService, AesFileEncryptionService>();
 
-        // OCR: mock di default (sostituibile con integrazione reale).
-        services.AddScoped<IBillOcrService, MockBillOcrService>();
+        // OCR bollette: provider selezionabile da configurazione (sezione "Ocr").
+        //   - "Local" (default): PdfPig (PDF digitali) + Tesseract (immagini) + parser italiano
+        //   - "Azure": Azure AI Document Intelligence (prebuilt-invoice) + parser italiano
+        //   - "Mock": dati fittizi per sviluppo/demo
+        var ocr = new OcrSettings();
+        config.GetSection("Ocr").Bind(ocr);
+        services.AddSingleton(ocr);
+
+        // Componenti riusabili dalle pipeline OCR.
+        services.AddSingleton<ItalianBillParser>();
+        services.AddSingleton<PdfTextExtractor>();
+        services.AddSingleton<TesseractOcrEngine>();
+
+        switch (ocr.Provider.Trim().ToLowerInvariant())
+        {
+            case "azure":
+                services.AddScoped<IBillOcrService, AzureDocumentIntelligenceOcrService>();
+                break;
+            case "mock":
+                services.AddScoped<IBillOcrService, MockBillOcrService>();
+                break;
+            default: // "local"
+                services.AddScoped<IBillOcrService, LocalBillOcrService>();
+                break;
+        }
 
         return services;
     }
