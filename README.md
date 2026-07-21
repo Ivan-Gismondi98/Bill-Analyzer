@@ -15,6 +15,7 @@ e previsione della prossima bolletta.
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
 ![EF Core](https://img.shields.io/badge/EF%20Core-SQLite%20%7C%20PostgreSQL-6C3483)
 ![OCR](https://img.shields.io/badge/OCR-PdfPig%20%2B%20Tesseract%20%7C%20Azure%20DI-EB6834)
+![License](https://img.shields.io/badge/License-Proprietaria-red)
 
 **Android · iOS · macOS · Windows · Web**
 
@@ -247,6 +248,11 @@ inoltro bollette via email, assistente AI, simulatore fotovoltaico) — sono des
 - 🏛️ [`docs/ARCHITETTURA.md`](docs/ARCHITETTURA.md) — scelte architetturali e formule di dominio
 - 🎨 [`docs/prototipo-app.html`](docs/prototipo-app.html) — prototipo navigabile di tutte le maschere
 - 🔍 [`falle.md`](falle.md) — audit di sicurezza con stato correzioni + roadmap prodotto
+
+## 📜 Licenza
+
+**Proprietaria — tutti i diritti riservati.** Il codice non può essere usato, copiato o
+distribuito senza autorizzazione scritta. Dettagli in [`LICENSE`](LICENSE).
 
 ---
 
