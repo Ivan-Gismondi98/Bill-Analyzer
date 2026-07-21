@@ -20,7 +20,7 @@ public static class MappingExtensions
     public static BollettaDto ToDto(this Bolletta b) =>
         new(b.Id, b.ContrattoId, b.NumeroFattura, b.PeriodoInizio, b.PeriodoFine, b.DataEmissione,
             b.ImportoTotale, b.ConsumoTotaleKwh, b.ConsumoF1Kwh, b.ConsumoF2Kwh, b.ConsumoF3Kwh,
-            b.ConsumoSm3, b.DaOcr, b.VociDiCosto.Select(v => v.ToDto()).ToList());
+            b.ConsumoSm3, b.DaOcr, b.ConfidenzaOcr, b.VociDiCosto.Select(v => v.ToDto()).ToList());
 
     public static LetturaContatoreDto ToDto(this LetturaContatore l) =>
         new(l.Id, l.ContrattoId, l.DataLettura, l.ValoreTotale, l.ValoreF1, l.ValoreF2, l.ValoreF3, l.DaBolletta, l.Note);

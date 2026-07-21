@@ -47,6 +47,7 @@ public class BollettaConfig : IEntityTypeConfiguration<Bolletta>
     {
         b.HasKey(x => x.Id);
         b.Property(x => x.ImportoTotale).HasPrecision(18, 2);
+        b.Property(x => x.ConfidenzaOcr).HasPrecision(4, 3);
         foreach (var name in new[] { nameof(Bolletta.ConsumoTotaleKwh), nameof(Bolletta.ConsumoF1Kwh),
             nameof(Bolletta.ConsumoF2Kwh), nameof(Bolletta.ConsumoF3Kwh), nameof(Bolletta.ConsumoSm3) })
             b.Property(name).HasColumnType("decimal(18,3)");

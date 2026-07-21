@@ -47,8 +47,11 @@ public class SimulazioneController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == req.ContrattoId && c.UtenteId == _currentUser.UtenteId);
         if (contratto is null) return BadRequest(new { message = "Contratto non valido." });
 
+        // Base del calcolo: l'ultima lettura PRECEDENTE a quella della richiesta.
+        // Il client salva l'auto-lettura prima di chiedere la previsione: senza questo
+        // filtro il delta verrebbe calcolato contro la lettura appena salvata (= 0).
         var ultimaLettura = await _db.Letture
-            .Where(l => l.ContrattoId == req.ContrattoId)
+            .Where(l => l.ContrattoId == req.ContrattoId && l.DataLettura < req.DataLetturaAttuale)
             .OrderByDescending(l => l.DataLettura)
             .FirstOrDefaultAsync();
 

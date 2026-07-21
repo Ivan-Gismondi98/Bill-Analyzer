@@ -83,6 +83,17 @@ public class BolletteController : ControllerBase
             return UnprocessableEntity(new { message = ex.Message });
         }
 
+        // Guardia di qualità: un risultato inutilizzabile non deve MAI sovrascrivere
+        // i dati della bolletta precedente. Meglio un errore chiaro che dati fasulli.
+        const decimal SogliaConfidenza = 0.35m;
+        if (ocr.ImportoTotale <= 0 || ocr.ConfidenzaMedia < SogliaConfidenza)
+            return UnprocessableEntity(new
+            {
+                message = "Non sono riuscito a leggere dati affidabili da questo documento " +
+                          $"(confidenza {ocr.ConfidenzaMedia:P0}). Prova con una foto più nitida o con il PDF originale.",
+                confidenza = ocr.ConfidenzaMedia
+            });
+
         // Conservazione "leggera": teniamo solo i dati estratti dell'ULTIMA bolletta
         // caricata per il contratto (fino al prossimo upload). Il file originale non
         // viene mai salvato, così non appesantiamo server e memoria.
@@ -103,8 +114,9 @@ public class BolletteController : ControllerBase
             ConsumoF2Kwh = ocr.ConsumoF2Kwh,
             ConsumoF3Kwh = ocr.ConsumoF3Kwh,
             ConsumoSm3 = ocr.ConsumoSm3,
-            FileOriginale = file.FileName,
+            FileOriginale = Path.GetFileName(file.FileName),
             DaOcr = true,
+            ConfidenzaOcr = ocr.ConfidenzaMedia,
             VociDiCosto = ocr.VociDiCosto
                 .Select(v => new VoceDiCosto { Categoria = v.Categoria, Descrizione = v.Descrizione, Importo = v.Importo })
                 .ToList()

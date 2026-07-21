@@ -98,7 +98,14 @@ public class ContrattiController : ControllerBase
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms, ct);
-        var payload = _encryption.Encrypt(ms.ToArray());
+        var bytes = ms.ToArray();
+
+        // Accettiamo SOLO PDF reali: si verificano i magic byte (%PDF), non l'estensione
+        // né il Content-Type, entrambi controllati dal client.
+        if (bytes.Length < 4 || bytes[0] != 0x25 || bytes[1] != 0x50 || bytes[2] != 0x44 || bytes[3] != 0x46)
+            return UnprocessableEntity(new { message = "Il file non è un PDF valido. Carica il PDF originale del contratto." });
+
+        var payload = _encryption.Encrypt(bytes);
 
         var doc = await _db.DocumentiContratto.FirstOrDefaultAsync(d => d.ContrattoId == id, ct);
         if (doc is null)
@@ -107,8 +114,8 @@ public class ContrattiController : ControllerBase
             _db.DocumentiContratto.Add(doc);
         }
 
-        doc.NomeFile = file.FileName;
-        doc.ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/pdf" : file.ContentType;
+        doc.NomeFile = Path.GetFileName(file.FileName);   // niente percorsi nel nome
+        doc.ContentType = "application/pdf";              // mai il Content-Type del client
         doc.DimensioneByte = file.Length;
         doc.Contenuto = payload.Ciphertext;
         doc.Nonce = payload.Nonce;
@@ -126,8 +133,19 @@ public class ContrattiController : ControllerBase
         var doc = await _db.DocumentiContratto.AsNoTracking().FirstOrDefaultAsync(d => d.ContrattoId == id);
         if (doc is null) return NotFound();
 
-        var plaintext = _encryption.Decrypt(new EncryptedPayload(doc.Contenuto, doc.Nonce, doc.Tag));
-        return File(plaintext, doc.ContentType, doc.NomeFile);
+        try
+        {
+            var plaintext = _encryption.Decrypt(new EncryptedPayload(doc.Contenuto, doc.Nonce, doc.Tag));
+            return File(plaintext, doc.ContentType, doc.NomeFile);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            // Chiave ruotata o dato corrotto: errore chiaro invece di un 500 anonimo.
+            return UnprocessableEntity(new
+            {
+                message = "Il documento non è decifrabile (chiave di cifratura cambiata o dato corrotto). Ricaricalo."
+            });
+        }
     }
 
     [HttpDelete("{id:guid}/documento")]

@@ -4,9 +4,9 @@ namespace BollettaAnalyzer.Application.DTOs;
 
 public record RegisterRequest(
     [property: Required, EmailAddress] string Email,
-    [property: Required, MinLength(6)] string Password,
-    [property: Required] string Nome,
-    [property: Required] string Cognome);
+    [property: Required, MinLength(8), MaxLength(128)] string Password,
+    [property: Required, MaxLength(120)] string Nome,
+    [property: Required, MaxLength(120)] string Cognome);
 
 public record LoginRequest(
     [property: Required, EmailAddress] string Email,

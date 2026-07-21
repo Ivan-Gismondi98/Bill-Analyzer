@@ -21,6 +21,7 @@ public record BollettaDto(
     decimal ConsumoF3Kwh,
     decimal ConsumoSm3,
     bool DaOcr,
+    decimal? ConfidenzaOcr,
     IReadOnlyList<VoceDiCostoDto> VociDiCosto);
 
 /// <summary>Risultato dell'analisi di una bolletta: breakdown + ripartizione fasce.</summary>

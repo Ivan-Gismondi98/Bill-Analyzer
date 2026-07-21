@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BollettaAnalyzer.Domain.Enums;
 
 namespace BollettaAnalyzer.Application.DTOs;
@@ -30,15 +31,15 @@ public record DocumentoContrattoInfoDto(
 
 public record UpsertContrattoRequest(
     TipoFornitura TipoFornitura,
-    string Fornitore,
-    string? CodicePod,
-    string? CodicePdr,
-    string NomeOfferta,
+    [property: Required, MaxLength(160)] string Fornitore,
+    [property: MaxLength(30)] string? CodicePod,
+    [property: MaxLength(30)] string? CodicePdr,
+    [property: MaxLength(160)] string NomeOfferta,
     TipoTariffa TipoTariffa,
-    decimal PotenzaImpegnataKw,
-    decimal PrezzoKwhMonorario,
-    decimal PrezzoKwhF1,
-    decimal PrezzoKwhF2,
-    decimal PrezzoKwhF3,
-    decimal PrezzoSm3,
-    decimal QuotaFissaMensile);
+    [property: Range(0, 1000)] decimal PotenzaImpegnataKw,
+    [property: Range(0, 100)] decimal PrezzoKwhMonorario,
+    [property: Range(0, 100)] decimal PrezzoKwhF1,
+    [property: Range(0, 100)] decimal PrezzoKwhF2,
+    [property: Range(0, 100)] decimal PrezzoKwhF3,
+    [property: Range(0, 100)] decimal PrezzoSm3,
+    [property: Range(0, 10_000)] decimal QuotaFissaMensile);

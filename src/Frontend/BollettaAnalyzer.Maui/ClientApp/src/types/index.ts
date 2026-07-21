@@ -62,6 +62,8 @@ export interface Bolletta {
   consumoF3Kwh: number;
   consumoSm3: number;
   daOcr: boolean;
+  /** Confidenza media (0..1) dell'estrazione OCR; null per inserimenti manuali. */
+  confidenzaOcr?: number | null;
   vociDiCosto: VoceDiCosto[];
 }
 

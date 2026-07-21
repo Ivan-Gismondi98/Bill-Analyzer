@@ -9,6 +9,36 @@
 
 ---
 
+## 📊 Stato delle correzioni
+
+| # | Falla | Gravità | Stato |
+|---|-------|---------|-------|
+| 1 | Chiave JWT di fallback hardcoded | 🔴 Critica | ✅ Corretta — fail-fast in produzione |
+| 2 | Utente demo seedato in produzione | 🔴 Critica | ✅ Corretta — seed solo in Development |
+| 3 | Chiave cifratura documenti hardcoded | 🟠 Alta | ✅ Corretta — fail-fast + 422 su decifratura fallita |
+| 4 | Previsione bolletta sempre ≈ 0 | 🟠 Alta | ✅ Corretta — delta sulla lettura precedente |
+| 5 | CORS aperto con credenziali | 🟠 Alta | ✅ Corretta — allowlist da config in produzione |
+| 6 | No rate limiting / enumerazione utenti | 🟡 Media | 🔸 Parziale — rate limiter + timing fix; resta il 409 esplicito su register |
+| 7 | OCR inaffidabile sovrascrive i dati | 🟡 Media | ✅ Corretta — soglia confidenza + confidenza persistita e mostrata in UI |
+| 8 | Input numerici/date non validati | 🟡 Media | ✅ Corretta — DataAnnotations + regole dominio letture |
+| 9 | Upload documento senza validazione tipo | 🟡 Media | ✅ Corretta — magic byte %PDF, content-type forzato, nome sanificato |
+| 10 | EnsureCreated invece di migrazioni | 🟡 Media | 🔸 Parziale — usa Migrate se esistono migrazioni; vanno generate con `dotnet ef` |
+| 11 | Nessun handler globale eccezioni | 🟡 Media | ✅ Corretta — ProblemDetails + UseExceptionHandler |
+| 12 | Manca cancellazione account/export (GDPR) | 🟡 Media | ✅ Corretta — `DELETE /auth/account` + `GET /auth/export` |
+| 13 | Token JWT in localStorage | 🟢 Bassa | 📋 Da fare — richiede secure storage nativo / cookie HttpOnly |
+| 14 | Password policy debole | 🟢 Bassa | ✅ Corretta — minimo 8 caratteri |
+| 15 | Niente HTTPS/HSTS/security headers | 🟢 Bassa | ✅ Corretta — HSTS + redirect + header in produzione |
+| 16 | JWT non revocabili, no refresh | 🟢 Bassa | 📋 Da fare — richiede refresh token con rotazione |
+| 17 | ManteniUltime3 cancella la baseline | 🟢 Bassa | ✅ Corretta — DaBolletta esclusa + transazione unica |
+| 18 | TesseractEngine ricreato a ogni richiesta | 🟢 Bassa | ✅ Corretta — engine riusato con lock |
+| 19 | Fallback parser "max kWh" rischioso | 🟢 Bassa | ✅ Corretta — usato solo come ultima risorsa |
+
+> ⚠️ Nota di sviluppo: l'entità `Bolletta` ha ora la colonna `ConfidenzaOcr`. Con
+> `EnsureCreated` i database SQLite di sviluppo esistenti **non** vengono aggiornati:
+> eliminare `bolletta.db` (viene ricreato e ri-seedato al prossimo avvio).
+
+---
+
 ## 🔴 CRITICHE
 
 ### 1. Chiave JWT di fallback hardcoded nel codice sorgente

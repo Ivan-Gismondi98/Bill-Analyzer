@@ -52,8 +52,12 @@ public class ItalianBillParser
         var f2 = EstraiKwhFascia(t, "2") ?? 0m;
         var f3 = EstraiKwhFascia(t, "3") ?? 0m;
 
+        // Ordine di affidabilità: etichetta esplicita → somma fasce → fallback "max kWh"
+        // (quest'ultimo solo come ultima risorsa: può agganciare valori non pertinenti,
+        // es. il consumo annuo indicato a fini informativi).
         var totaleKwh = EstraiConsumoTotaleKwh(t);
         if (totaleKwh is null && (f1 + f2 + f3) > 0) totaleKwh = f1 + f2 + f3;
+        totaleKwh ??= FallbackMaxKwh(t);
 
         // Consumo gas.
         var smc = EstraiConsumoSmc(t) ?? 0m;
@@ -181,8 +185,15 @@ public class ItalianBillParser
                 if (v is > 0) return v;
             }
         }
+        return null;
+    }
 
-        // Ultima spiaggia: prendi il valore in kWh più grande presente nel testo.
+    /// <summary>
+    /// Ultima risorsa quando né l'etichetta del totale né le fasce sono presenti:
+    /// il valore in kWh più grande nel testo. Poco affidabile: usare solo come fallback.
+    /// </summary>
+    private static decimal? FallbackMaxKwh(string t)
+    {
         decimal max = 0m;
         foreach (Match m in Regex.Matches(t, Num + @"\s*kwh", RegexOptions.IgnoreCase))
         {

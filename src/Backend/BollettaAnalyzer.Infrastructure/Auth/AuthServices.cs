@@ -10,6 +10,12 @@ namespace BollettaAnalyzer.Infrastructure.Auth;
 /// <summary>Impostazioni di firma del JWT (bind da appsettings: "Jwt").</summary>
 public class JwtSettings
 {
+    /// <summary>
+    /// Chiave usata SOLO in ambiente Development quando Jwt:Key non è configurata.
+    /// In produzione l'app rifiuta di partire senza una chiave reale (vedi Program.cs).
+    /// </summary>
+    public const string DevOnlyKey = "DEV_ONLY_insecure_signing_key_min_32_chars!!";
+
     public string Key { get; set; } = string.Empty;
     public string Issuer { get; set; } = "BollettaAnalyzer";
     public string Audience { get; set; } = "BollettaAnalyzer.Client";
