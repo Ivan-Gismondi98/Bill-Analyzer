@@ -43,6 +43,17 @@
   </ItemGroup>
 
   <!--
+    Registra, al momento della VALUTAZIONE del progetto, se la SPA React è già presente:
+    è esattamente la condizione in cui la glob MauiAsset dell'SDK MAUI la include nel
+    pacchetto. Le glob sono infatti valutate al caricamento del progetto, prima che i
+    target girino, quindi un client generato durante il build entra nel pacchetto solo
+    dalla compilazione successiva.
+  -->
+  <PropertyGroup>
+    <_ClientPresenteAllaValutazione Condition="Exists('Resources\Raw\wwwroot\index.html')">true</_ClientPresenteAllaValutazione>
+  </PropertyGroup>
+
+  <!--
     Build automatica del client React prima della compilazione MAUI.
     Richiede Node/npm installati. Disattivabile con -p:SkipClientBuild=true.
   -->
@@ -51,22 +62,22 @@
     <Exec Command="npm install" WorkingDirectory="ClientApp" Condition="!Exists('ClientApp/node_modules')" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
 
-    <!--
-      Le glob degli item MSBuild sono valutate al caricamento del progetto, cioè PRIMA che
-      questo target generi wwwroot: al primo build (o su clone fresco, dove wwwroot è
-      gitignorata e quindi assente) i file appena prodotti non entrerebbero nel pacchetto
-      e l'HybridWebView risponderebbe "Resource not found (404)".
-      Qui li aggiungiamo esplicitamente come MauiAsset, ora che esistono su disco.
-      LogicalName replica il percorso relativo a Resources\Raw, così l'HybridRoot
-      "wwwroot" continua a risolvere index.html e gli asset.
-    -->
-    <ItemGroup>
-      <MauiAsset Include="Resources\Raw\wwwroot\**\*"
-                 Exclude="@(MauiAsset)"
-                 LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
-    </ItemGroup>
+    <Error Condition="!Exists('Resources\Raw\wwwroot\index.html')"
+           Text="Il build del client React non ha prodotto Resources\Raw\wwwroot\index.html. Controlla l'output di 'npm run build' in ClientApp." />
 
-    <Message Importance="high" Text="Client React impacchettato: @(MauiAsset->Count()) asset in wwwroot." />
+    <!--
+      Primo build su clone fresco: i file sono appena stati creati e la glob dell'SDK
+      non li ha visti, quindi NON sono nel pacchetto e l'app mostrerebbe il pannello
+      "Client React non impacchettato". Basta ricompilare: al secondo build la glob li include.
+      Si avvisa in modo esplicito invece di aggiungerli qui a mano, perché i metadati
+      %(...) dentro un target attivano il batching di MSBuild e produrrebbero
+      LogicalName errati (errore MSB3024 in fase di copia degli asset).
+    -->
+    <Warning Condition="'$(_ClientPresenteAllaValutazione)' != 'true'"
+             Text="Client React generato ORA: non era presente all'avvio della compilazione, quindi non è incluso in questo pacchetto. Ricompila (Compila di nuovo) per includerlo." />
+
+    <Message Condition="'$(_ClientPresenteAllaValutazione)' == 'true'"
+             Importance="high" Text="Client React presente e incluso nel pacchetto (wwwroot)." />
   </Target>
 
 </Project>
