@@ -50,6 +50,23 @@
     <Message Importance="high" Text="Build del client React (ClientApp)…" />
     <Exec Command="npm install" WorkingDirectory="ClientApp" Condition="!Exists('ClientApp/node_modules')" />
     <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+
+    <!--
+      Le glob degli item MSBuild sono valutate al caricamento del progetto, cioè PRIMA che
+      questo target generi wwwroot: al primo build (o su clone fresco, dove wwwroot è
+      gitignorata e quindi assente) i file appena prodotti non entrerebbero nel pacchetto
+      e l'HybridWebView risponderebbe "Resource not found (404)".
+      Qui li aggiungiamo esplicitamente come MauiAsset, ora che esistono su disco.
+      LogicalName replica il percorso relativo a Resources\Raw, così l'HybridRoot
+      "wwwroot" continua a risolvere index.html e gli asset.
+    -->
+    <ItemGroup>
+      <MauiAsset Include="Resources\Raw\wwwroot\**\*"
+                 Exclude="@(MauiAsset)"
+                 LogicalName="wwwroot\%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <Message Importance="high" Text="Client React impacchettato: @(MauiAsset->Count()) asset in wwwroot." />
   </Target>
 
 </Project>
