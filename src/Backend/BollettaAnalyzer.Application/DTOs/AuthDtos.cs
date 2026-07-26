@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations;
 namespace BollettaAnalyzer.Application.DTOs;
 
 public record RegisterRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required, MinLength(8), MaxLength(128)] string Password,
-    [property: Required, MaxLength(120)] string Nome,
-    [property: Required, MaxLength(120)] string Cognome);
+    [Required, EmailAddress] string Email,
+    [Required, MinLength(8), MaxLength(128)] string Password,
+    [Required, MaxLength(120)] string Nome,
+    [Required, MaxLength(120)] string Cognome);
 
 public record LoginRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required] string Password);
+    [Required, EmailAddress] string Email,
+    [Required] string Password);
 
 public record AuthResponse(
     string Token,

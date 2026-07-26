@@ -16,8 +16,8 @@ public record LetturaContatoreDto(
 public record CreateLetturaRequest(
     Guid ContrattoId,
     DateTime DataLettura,
-    [property: Range(0, 99_999_999)] decimal ValoreTotale,
-    [property: Range(0, 99_999_999)] decimal? ValoreF1,
-    [property: Range(0, 99_999_999)] decimal? ValoreF2,
-    [property: Range(0, 99_999_999)] decimal? ValoreF3,
-    [property: MaxLength(500)] string? Note);
+    [Range(0, 99_999_999)] decimal ValoreTotale,
+    [Range(0, 99_999_999)] decimal? ValoreF1,
+    [Range(0, 99_999_999)] decimal? ValoreF2,
+    [Range(0, 99_999_999)] decimal? ValoreF3,
+    [MaxLength(500)] string? Note);

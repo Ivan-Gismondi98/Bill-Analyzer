@@ -14,8 +14,8 @@ public record DispositivoDto(
     decimal ConsumoMensileKwh);
 
 public record UpsertDispositivoRequest(
-    [property: Required, MaxLength(120)] string Nome,
-    [property: Range(1, 50_000)] int PotenzaWatt,
-    [property: Range(0, 24)] decimal OreUtilizzoGiornaliere,
-    [property: Range(1, 7)] int GiorniSettimana,
+    [Required, MaxLength(120)] string Nome,
+    [Range(1, 50_000)] int PotenzaWatt,
+    [Range(0, 24)] decimal OreUtilizzoGiornaliere,
+    [Range(1, 7)] int GiorniSettimana,
     FasciaOraria FasciaPrevalente);

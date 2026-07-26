@@ -31,15 +31,15 @@ public record DocumentoContrattoInfoDto(
 
 public record UpsertContrattoRequest(
     TipoFornitura TipoFornitura,
-    [property: Required, MaxLength(160)] string Fornitore,
-    [property: MaxLength(30)] string? CodicePod,
-    [property: MaxLength(30)] string? CodicePdr,
-    [property: MaxLength(160)] string NomeOfferta,
+    [Required, MaxLength(160)] string Fornitore,
+    [MaxLength(30)] string? CodicePod,
+    [MaxLength(30)] string? CodicePdr,
+    [MaxLength(160)] string NomeOfferta,
     TipoTariffa TipoTariffa,
-    [property: Range(0, 1000)] decimal PotenzaImpegnataKw,
-    [property: Range(0, 100)] decimal PrezzoKwhMonorario,
-    [property: Range(0, 100)] decimal PrezzoKwhF1,
-    [property: Range(0, 100)] decimal PrezzoKwhF2,
-    [property: Range(0, 100)] decimal PrezzoKwhF3,
-    [property: Range(0, 100)] decimal PrezzoSm3,
-    [property: Range(0, 10_000)] decimal QuotaFissaMensile);
+    [Range(0, 1000)] decimal PotenzaImpegnataKw,
+    [Range(0, 100)] decimal PrezzoKwhMonorario,
+    [Range(0, 100)] decimal PrezzoKwhF1,
+    [Range(0, 100)] decimal PrezzoKwhF2,
+    [Range(0, 100)] decimal PrezzoKwhF3,
+    [Range(0, 100)] decimal PrezzoSm3,
+    [Range(0, 10_000)] decimal QuotaFissaMensile);

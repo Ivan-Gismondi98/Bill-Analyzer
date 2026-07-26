@@ -166,4 +166,4 @@ public class AuthController : ControllerBase
 }
 
 /// <summary>Ri-autenticazione richiesta per l'eliminazione dell'account.</summary>
-public record DeleteAccountRequest([property: Required] string Password);
+public record DeleteAccountRequest([Required] string Password);
