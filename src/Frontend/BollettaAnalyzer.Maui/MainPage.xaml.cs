@@ -4,37 +4,45 @@ namespace BollettaAnalyzer.Maui;
 
 public partial class MainPage : ContentPage
 {
+    /// <summary>Percorso della SPA dentro il pacchetto (HybridRoot + DefaultFile).</summary>
+    private const string PercorsoIndex = "wwwroot/index.html";
+
     public MainPage()
     {
         InitializeComponent();
-#if DEBUG
-        _ = VerificaAssetClientAsync();
-#endif
+        _ = VerificaClientAsync();
     }
 
-#if DEBUG
     /// <summary>
-    /// Diagnostica di sviluppo: verifica che la SPA React sia effettivamente
-    /// impacchettata come app package file. Se manca, l'HybridWebView mostra
-    /// "Resource not found (404)" e qui si vede subito il perché nell'Output.
+    /// Verifica che la SPA React sia effettivamente presente tra gli asset del pacchetto.
+    /// Se manca, l'HybridWebView mostrerebbe solo un anonimo "Resource not found (404)":
+    /// qui invece si spiega a schermo la causa e come rimediare.
     /// </summary>
-    private static async Task VerificaAssetClientAsync()
+    private async Task VerificaClientAsync()
     {
-        const string percorso = "wwwroot/index.html";
         try
         {
-            using var stream = await FileSystem.OpenAppPackageFileAsync(percorso);
+            await using var stream = await FileSystem.OpenAppPackageFileAsync(PercorsoIndex);
             using var reader = new StreamReader(stream);
-            var contenuto = await reader.ReadToEndAsync();
-            Debug.WriteLine($"[BollettaAnalyzer] OK: '{percorso}' trovato nel pacchetto ({contenuto.Length} caratteri).");
+            var html = await reader.ReadToEndAsync();
+
+            Debug.WriteLine($"[BollettaAnalyzer] OK: '{PercorsoIndex}' presente nel pacchetto ({html.Length} caratteri).");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(
-                $"[BollettaAnalyzer] ERRORE: '{percorso}' NON è nel pacchetto dell'app ({ex.GetType().Name}). " +
-                "La build del client React non è stata impacchettata: esegui 'npm run build' in ClientApp, " +
-                "poi ricompila e reinstalla l'app (disinstallala prima dal dispositivo).");
+            var messaggio =
+                $"'{PercorsoIndex}' non è presente tra gli asset dell'app ({ex.GetType().Name}). " +
+                "La build del client React non è stata impacchettata nell'APK.";
+
+            Debug.WriteLine($"[BollettaAnalyzer] ERRORE: {messaggio}");
+
+            // L'UI va aggiornata sul thread principale.
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                dettaglioErrore.Text = messaggio;
+                pannelloErrore.IsVisible = true;
+                webView.IsVisible = false;
+            });
         }
     }
-#endif
 }

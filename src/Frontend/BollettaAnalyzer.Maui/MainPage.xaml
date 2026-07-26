@@ -4,12 +4,35 @@
              x:Class="BollettaAnalyzer.Maui.MainPage"
              Title="Bolletta Analyzer">
 
-    <!--
-      HybridWebView ospita la SPA React buildata in Resources/Raw/wwwroot.
-      HybridRoot punta alla cartella dei MauiAsset; DefaultFile è la pagina iniziale.
-    -->
-    <HybridWebView x:Name="webView"
-                   HybridRoot="wwwroot"
-                   DefaultFile="index.html" />
+    <Grid>
+        <!--
+          HybridWebView ospita la SPA React buildata in Resources/Raw/wwwroot.
+          HybridRoot punta alla cartella dei MauiAsset; DefaultFile è la pagina iniziale.
+        -->
+        <HybridWebView x:Name="webView"
+                       HybridRoot="wwwroot"
+                       DefaultFile="index.html" />
+
+        <!--
+          Pannello diagnostico mostrato SOLO se la SPA non è stata impacchettata.
+          Senza di esso l'utente vedrebbe soltanto il "Resource not found (404)"
+          generato dalla WebView, senza capire cosa fare.
+        -->
+        <ScrollView x:Name="pannelloErrore" IsVisible="False" BackgroundColor="#1E293B" Padding="24">
+            <VerticalStackLayout Spacing="14">
+                <Label Text="⚠️ Client React non impacchettato"
+                       FontSize="22" FontAttributes="Bold" TextColor="White" />
+                <Label x:Name="dettaglioErrore"
+                       FontSize="14" TextColor="#CBD5E1" />
+                <Label Text="Come risolvere:"
+                       FontSize="16" FontAttributes="Bold" TextColor="White" Margin="0,10,0,0" />
+                <Label FontSize="14" TextColor="#CBD5E1">
+                    <Label.Text>1) Nella cartella ClientApp esegui:  npm install  e poi  npm run build&#10;2) Verifica che esista Resources/Raw/wwwroot/index.html&#10;3) Ricompila il progetto MAUI (Ricompila soluzione)&#10;4) Se l'errore persiste, disinstalla l'app dal dispositivo e riavvia il debug</Label.Text>
+                </Label>
+                <Label Text="La build MAUI esegue automaticamente questi passi: se falliscono, controlla che Node/npm siano nel PATH."
+                       FontSize="12" TextColor="#94A3B8" Margin="0,10,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
 
 </ContentPage>
