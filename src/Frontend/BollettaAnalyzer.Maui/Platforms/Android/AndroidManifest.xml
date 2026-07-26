@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+	<!--
+	  usesCleartextTraffic: da Android 9 il traffico HTTP in chiaro è bloccato.
+	  Serve per raggiungere il backend di sviluppo su http://10.0.2.2:5080 dall'emulatore.
+	  In produzione va rimosso (o limitato ai soli host di sviluppo con
+	  android:networkSecurityConfig), servendo le API in HTTPS.
+	-->
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:usesCleartextTraffic="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.CAMERA" />

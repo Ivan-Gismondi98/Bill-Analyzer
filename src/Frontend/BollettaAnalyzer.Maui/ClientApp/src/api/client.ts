@@ -7,7 +7,30 @@ import * as mock from './mockData';
 
 // Con VITE_USE_MOCK=true l'app funziona senza backend (utile in sviluppo UI).
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+
+/**
+ * Base URL delle API.
+ *
+ * Dentro l'HybridWebView di MAUI la pagina è servita da un'origine locale all'app,
+ * quindi un percorso relativo come "/api" punterebbe all'app stessa e non al backend:
+ * serve un URL assoluto verso la macchina di sviluppo. Nell'emulatore Android l'host
+ * è raggiungibile all'indirizzo speciale 10.0.2.2 (su iOS Simulator è localhost).
+ *
+ * Con il dev server di Vite, invece, "/api" è corretto: il proxy inoltra a :5080.
+ * Impostare VITE_API_BASE_URL per forzare un backend specifico (es. in produzione).
+ */
+function risolviBaseUrl(): string {
+  const esplicito = import.meta.env.VITE_API_BASE_URL;
+  if (esplicito) return esplicito;
+
+  const host = window.location.hostname;
+  const nelDevServer = host === 'localhost' || host === '127.0.0.1';
+  if (nelDevServer) return '/api';
+
+  return 'http://10.0.2.2:5080/api';
+}
+
+const BASE_URL = risolviBaseUrl();
 
 const TOKEN_KEY = 'ba_token';
 
