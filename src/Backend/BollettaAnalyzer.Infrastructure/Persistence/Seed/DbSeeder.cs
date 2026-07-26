@@ -112,10 +112,11 @@ public static class DbSeeder
 
         var dispositivi = new List<DispositivoElettronico>
         {
-            new() { Utente = utente, Nome = "Frigorifero", PotenzaWatt = 150, OreUtilizzoGiornaliere = 24m, GiorniSettimana = 7, FasciaPrevalente = FasciaOraria.F3 },
-            new() { Utente = utente, Nome = "Lavatrice", PotenzaWatt = 2000, OreUtilizzoGiornaliere = 1.5m, GiorniSettimana = 4, FasciaPrevalente = FasciaOraria.F1 },
-            new() { Utente = utente, Nome = "Forno elettrico", PotenzaWatt = 2200, OreUtilizzoGiornaliere = 0.5m, GiorniSettimana = 5, FasciaPrevalente = FasciaOraria.F2 },
-            new() { Utente = utente, Nome = "Condizionatore", PotenzaWatt = 1200, OreUtilizzoGiornaliere = 4m, GiorniSettimana = 6, FasciaPrevalente = FasciaOraria.F1 },
+            // Frigorifero: sempre attivo, tutte le fasce.
+            new() { Utente = utente, Nome = "Frigorifero", PotenzaWatt = 150, OreUtilizzoGiornaliere = 24m, GiorniSettimana = 7, UsaF1 = true, UsaF2 = true, UsaF3 = true },
+            new() { Utente = utente, Nome = "Lavatrice", PotenzaWatt = 2000, OreUtilizzoGiornaliere = 1.5m, GiorniSettimana = 4, UsaF1 = true, UsaF2 = false, UsaF3 = false },
+            new() { Utente = utente, Nome = "Forno elettrico", PotenzaWatt = 2200, OreUtilizzoGiornaliere = 0.5m, GiorniSettimana = 5, UsaF1 = false, UsaF2 = true, UsaF3 = false },
+            new() { Utente = utente, Nome = "Condizionatore", PotenzaWatt = 1200, OreUtilizzoGiornaliere = 4m, GiorniSettimana = 6, UsaF1 = true, UsaF2 = true, UsaF3 = false },
         };
 
         db.Utenti.Add(utente);

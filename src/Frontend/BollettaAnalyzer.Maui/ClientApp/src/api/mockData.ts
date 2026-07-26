@@ -113,8 +113,8 @@ export const mockLetture: LetturaContatore[] = [
 ];
 
 export const mockDispositivi: Dispositivo[] = [
-  { id: 'd1', nome: 'Frigorifero', potenzaWatt: 150, oreUtilizzoGiornaliere: 24, giorniSettimana: 7, fasciaPrevalente: FasciaOraria.F3, consumoGiornalieroKwh: 3.6, consumoMensileKwh: 108 },
-  { id: 'd2', nome: 'Lavatrice', potenzaWatt: 2000, oreUtilizzoGiornaliere: 1.5, giorniSettimana: 4, fasciaPrevalente: FasciaOraria.F1, consumoGiornalieroKwh: 3, consumoMensileKwh: 51.4 },
-  { id: 'd3', nome: 'Forno elettrico', potenzaWatt: 2200, oreUtilizzoGiornaliere: 0.5, giorniSettimana: 5, fasciaPrevalente: FasciaOraria.F2, consumoGiornalieroKwh: 1.1, consumoMensileKwh: 23.6 },
-  { id: 'd4', nome: 'Condizionatore', potenzaWatt: 1200, oreUtilizzoGiornaliere: 4, giorniSettimana: 6, fasciaPrevalente: FasciaOraria.F1, consumoGiornalieroKwh: 4.8, consumoMensileKwh: 123.4 },
+  { id: 'd1', nome: 'Frigorifero', potenzaWatt: 150, oreUtilizzoGiornaliere: 24, giorniSettimana: 7, fasce: [FasciaOraria.F1, FasciaOraria.F2, FasciaOraria.F3], consumoGiornalieroKwh: 3.6, consumoMensileKwh: 108 },
+  { id: 'd2', nome: 'Lavatrice', potenzaWatt: 2000, oreUtilizzoGiornaliere: 1.5, giorniSettimana: 4, fasce: [FasciaOraria.F1], consumoGiornalieroKwh: 3, consumoMensileKwh: 51.4 },
+  { id: 'd3', nome: 'Forno elettrico', potenzaWatt: 2200, oreUtilizzoGiornaliere: 0.5, giorniSettimana: 5, fasce: [FasciaOraria.F2], consumoGiornalieroKwh: 1.1, consumoMensileKwh: 23.6 },
+  { id: 'd4', nome: 'Condizionatore', potenzaWatt: 1200, oreUtilizzoGiornaliere: 4, giorniSettimana: 6, fasce: [FasciaOraria.F1, FasciaOraria.F2], consumoGiornalieroKwh: 4.8, consumoMensileKwh: 123.4 },
 ];

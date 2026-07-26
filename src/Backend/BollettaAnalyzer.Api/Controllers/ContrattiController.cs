@@ -45,11 +45,50 @@ public class ContrattiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ContrattoDto>> Crea(UpsertContrattoRequest req)
     {
+        // Il nuovo contratto è quello ATTUALE: gli eventuali contratti attivi dello
+        // stesso tipo diventano storico (Attivo=false) e restano confrontabili.
+        var precedenti = await _db.Contratti
+            .Where(x => x.UtenteId == _currentUser.UtenteId
+                        && x.TipoFornitura == req.TipoFornitura
+                        && x.Attivo)
+            .ToListAsync();
+        foreach (var vecchio in precedenti) vecchio.Attivo = false;
+
         var c = new Contratto { UtenteId = _currentUser.UtenteId!.Value };
         Applica(c, req);
         _db.Contratti.Add(c);
         await _db.SaveChangesAsync();
         return CreatedAtAction(nameof(Dettaglio), new { id = c.Id }, c.ToDto());
+    }
+
+    /// <summary>
+    /// Estrae i dati di un contratto da un PDF (prezzi, POD/PDR, quota fissa, potenza…)
+    /// SENZA salvare nulla: il client usa il risultato per precompilare il form.
+    /// Stessa filosofia "leggera" delle bollette: si conservano i dati, mai il file.
+    /// </summary>
+    [HttpPost("analizza")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<ActionResult<ContrattoEstrattoDto>> AnalizzaDocumento(
+        IFormFile file, [FromServices] Infrastructure.Services.Ocr.ItalianContractParser parser,
+        [FromServices] Infrastructure.Services.Ocr.PdfTextExtractor pdf, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0) return BadRequest(new { message = "Nessun file caricato." });
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, ct);
+        var bytes = ms.ToArray();
+
+        if (bytes.Length < 4 || bytes[0] != 0x25 || bytes[1] != 0x50 || bytes[2] != 0x44 || bytes[3] != 0x46)
+            return UnprocessableEntity(new { message = "Il file non è un PDF valido." });
+
+        string testo;
+        try { testo = pdf.EstraiTesto(bytes); }
+        catch { return UnprocessableEntity(new { message = "Impossibile leggere il PDF (file non valido o protetto)." }); }
+
+        if (testo.Trim().Length < 40)
+            return UnprocessableEntity(new { message = "Il PDF sembra una scansione priva di testo: compila i campi manualmente." });
+
+        return Ok(parser.Parse(testo));
     }
 
     [HttpPut("{id:guid}")]

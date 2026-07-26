@@ -30,18 +30,30 @@ export default function DashboardPage() {
 
   useEffect(() => {
     contrattiApi.lista().then((cs) => {
-      setContratti(cs);
-      const luce = cs.find((c) => c.tipoFornitura === TipoFornitura.Luce) ?? cs[0];
+      // In dashboard si lavora sui contratti ATTIVI (lo storico vive nel Profilo).
+      const attivi = cs.filter((c) => c.attivo);
+      setContratti(attivi);
+      const luce = attivi.find((c) => c.tipoFornitura === TipoFornitura.Luce) ?? attivi[0];
       if (luce) setContrattoId(luce.id);
     });
   }, []);
 
   useEffect(() => {
-    // Carica l'ultima bolletta analizzata all'avvio.
-    bolletteApi.lista().then(async (b) => {
-      if (b.length) setAnalisi(await bolletteApi.analisi(b[0].id));
+    // L'analisi mostrata segue il contratto selezionato: cambiando contratto
+    // (es. da Luce a Gas) si carica l'ultima bolletta DI QUEL contratto.
+    if (!contrattoId) return;
+    let annullato = false;
+    bolletteApi.lista(contrattoId).then(async (b) => {
+      if (annullato) return;
+      if (b.length) {
+        const a = await bolletteApi.analisi(b[0].id);
+        if (!annullato) setAnalisi(a);
+      } else {
+        setAnalisi(null);
+      }
     });
-  }, []);
+    return () => { annullato = true; };
+  }, [contrattoId]);
 
   const onUpload = async (file?: File) => {
     if (!file || !contrattoId) return;
@@ -58,11 +70,15 @@ export default function DashboardPage() {
   };
 
   const b = analisi?.bolletta;
+  const contrattoSel = contratti.find((c) => c.id === contrattoId);
+  const isGas = contrattoSel?.tipoFornitura === TipoFornitura.Gas;
   const datiFasce = b ? [
     { fascia: 'F1', kWh: b.consumoF1Kwh },
     { fascia: 'F2', kWh: b.consumoF2Kwh },
     { fascia: 'F3', kWh: b.consumoF3Kwh },
   ] : [];
+  // Le fasce hanno senso solo per la luce (per il gas sono sempre 0).
+  const mostraFasce = !isGas && datiFasce.some((d) => d.kWh > 0);
 
   return (
     <div className="space-y-6">
@@ -119,7 +135,12 @@ export default function DashboardPage() {
               <div className="mt-1 text-3xl font-black">€ {b!.importoTotale.toFixed(2)}</div>
               <div className="pointer-events-none absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10 blur-xl" />
             </div>
-            <Stat label="Consumo" value={`${b!.consumoTotaleKwh} kWh`} icon="⚡" grad="from-amber-400 to-orange-500" />
+            <Stat
+              label="Consumo"
+              value={isGas ? `${b!.consumoSm3} Sm³` : `${b!.consumoTotaleKwh} kWh`}
+              icon={isGas ? '🔥' : '⚡'}
+              grad={isGas ? 'from-cyan-400 to-sky-500' : 'from-amber-400 to-orange-500'}
+            />
             <Stat label="Periodo" value={`${new Date(b!.periodoInizio).toLocaleDateString('it-IT')} → ${new Date(b!.periodoFine).toLocaleDateString('it-IT')}`} icon="📅" grad="from-cyan-400 to-blue-500" small />
           </section>
 
@@ -141,7 +162,8 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </section>
 
-            {/* Fasce orarie */}
+            {/* Fasce orarie (solo luce) */}
+            {mostraFasce && (
             <section className="card">
               <h2 className="mb-2 font-semibold text-slate-700">Consumi per fascia oraria</h2>
               <ResponsiveContainer width="100%" height={260}>
@@ -158,6 +180,7 @@ export default function DashboardPage() {
                 F1 {analisi.ripartizioneFasce.percentualeF1}% · F2 {analisi.ripartizioneFasce.percentualeF2}% · F3 {analisi.ripartizioneFasce.percentualeF3}%
               </p>
             </section>
+            )}
           </div>
 
           {/* Suggerimenti */}

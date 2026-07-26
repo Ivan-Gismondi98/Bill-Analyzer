@@ -29,6 +29,26 @@ public record DocumentoContrattoInfoDto(
     long DimensioneByte,
     DateTime CaricatoIl);
 
+/// <summary>
+/// Dati estratti da un PDF di contratto: tutti opzionali, servono a precompilare il
+/// form lato client. Il file non viene mai conservato.
+/// </summary>
+public record ContrattoEstrattoDto(
+    TipoFornitura? TipoFornitura,
+    string? Fornitore,
+    string? CodicePod,
+    string? CodicePdr,
+    string? NomeOfferta,
+    TipoTariffa? TipoTariffa,
+    decimal? PotenzaImpegnataKw,
+    decimal? PrezzoKwhMonorario,
+    decimal? PrezzoKwhF1,
+    decimal? PrezzoKwhF2,
+    decimal? PrezzoKwhF3,
+    decimal? PrezzoSm3,
+    decimal? QuotaFissaMensile,
+    decimal Confidenza);
+
 public record UpsertContrattoRequest(
     TipoFornitura TipoFornitura,
     [Required, MaxLength(160)] string Fornitore,

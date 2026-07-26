@@ -64,6 +64,7 @@ public static class DependencyInjection
 
         // Componenti riusabili dalle pipeline OCR.
         services.AddSingleton<ItalianBillParser>();
+        services.AddSingleton<ItalianContractParser>();
         services.AddSingleton<PdfTextExtractor>();
         services.AddSingleton<TesseractOcrEngine>();
 

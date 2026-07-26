@@ -27,5 +27,5 @@ public static class MappingExtensions
 
     public static DispositivoDto ToDto(this DispositivoElettronico d) =>
         new(d.Id, d.Nome, d.PotenzaWatt, d.OreUtilizzoGiornaliere, d.GiorniSettimana,
-            d.FasciaPrevalente, d.ConsumoGiornalieroKwh, d.ConsumoMensileKwh);
+            d.Fasce, d.ConsumoGiornalieroKwh, d.ConsumoMensileKwh);
 }

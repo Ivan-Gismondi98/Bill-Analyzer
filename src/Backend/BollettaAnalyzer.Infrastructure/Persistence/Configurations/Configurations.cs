@@ -99,5 +99,6 @@ public class DispositivoConfig : IEntityTypeConfiguration<DispositivoElettronico
         // Proprietà calcolate: non mappate a colonne.
         b.Ignore(x => x.ConsumoGiornalieroKwh);
         b.Ignore(x => x.ConsumoMensileKwh);
+        b.Ignore(x => x.Fasce);
     }
 }

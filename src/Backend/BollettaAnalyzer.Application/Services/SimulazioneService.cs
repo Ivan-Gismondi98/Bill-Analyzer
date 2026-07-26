@@ -25,7 +25,7 @@ public class SimulazioneService : ISimulazioneService
 
         foreach (var d in dispositivi)
         {
-            var prezzo = PrezzoPerFascia(contratto, d.FasciaPrevalente);
+            var prezzo = PrezzoMedioPerFasce(contratto, d);
             var costo = d.ConsumoMensileKwh * prezzo;
 
             totaleGiornaliero += d.ConsumoGiornalieroKwh;
@@ -99,18 +99,26 @@ public class SimulazioneService : ISimulazioneService
             note);
     }
 
-    private static decimal PrezzoPerFascia(Contratto c, FasciaOraria fascia)
+    // Ore settimanali delle fasce ARERA (totale 168):
+    // F1 = lun-ven 8-19 (55h) · F2 = lun-ven 7-8 e 19-23 + sab 7-23 (41h) · F3 = resto (72h).
+    private const decimal OreF1 = 55m, OreF2 = 41m, OreF3 = 72m;
+
+    /// <summary>
+    /// Prezzo medio €/kWh per un dispositivo, ponderato sulle ore settimanali delle
+    /// fasce in cui viene usato: un frigorifero "sempre attivo" (F1+F2+F3) paga la
+    /// media pesata delle tre fasce, una lavatrice solo-F3 paga il prezzo F3.
+    /// </summary>
+    private static decimal PrezzoMedioPerFasce(Contratto c, DispositivoElettronico d)
     {
-        if (c.TipoTariffa == TipoTariffa.Monoraria || fascia == FasciaOraria.NonApplicabile)
+        if (c.TipoTariffa == TipoTariffa.Monoraria)
             return c.PrezzoKwhMonorario > 0 ? c.PrezzoKwhMonorario : PrezzoMedioLuce(c);
 
-        return fascia switch
-        {
-            FasciaOraria.F1 => c.PrezzoKwhF1,
-            FasciaOraria.F2 => c.PrezzoKwhF2,
-            FasciaOraria.F3 => c.PrezzoKwhF3,
-            _ => PrezzoMedioLuce(c)
-        };
+        decimal sommaPrezzo = 0m, sommaOre = 0m;
+        if (d.UsaF1) { sommaPrezzo += c.PrezzoKwhF1 * OreF1; sommaOre += OreF1; }
+        if (d.UsaF2) { sommaPrezzo += c.PrezzoKwhF2 * OreF2; sommaOre += OreF2; }
+        if (d.UsaF3) { sommaPrezzo += c.PrezzoKwhF3 * OreF3; sommaOre += OreF3; }
+
+        return sommaOre > 0 ? sommaPrezzo / sommaOre : PrezzoMedioLuce(c);
     }
 
     private static decimal PrezzoMedioLuce(Contratto c)

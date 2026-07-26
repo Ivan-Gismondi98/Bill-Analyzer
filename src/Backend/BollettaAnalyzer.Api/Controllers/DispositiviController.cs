@@ -36,6 +36,7 @@ public class DispositiviController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<DispositivoDto>> Crea(UpsertDispositivoRequest req)
     {
+        if (!FasceValide(req)) return BadRequest(new { message = "Seleziona almeno una fascia oraria tra F1, F2 e F3." });
         var d = new DispositivoElettronico { UtenteId = _currentUser.UtenteId!.Value };
         Applica(d, req);
         _db.Dispositivi.Add(d);
@@ -46,12 +47,16 @@ public class DispositiviController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<DispositivoDto>> Aggiorna(Guid id, UpsertDispositivoRequest req)
     {
+        if (!FasceValide(req)) return BadRequest(new { message = "Seleziona almeno una fascia oraria tra F1, F2 e F3." });
         var d = await _db.Dispositivi.FirstOrDefaultAsync(x => x.Id == id && x.UtenteId == _currentUser.UtenteId);
         if (d is null) return NotFound();
         Applica(d, req);
         await _db.SaveChangesAsync();
         return Ok(d.ToDto());
     }
+
+    private static bool FasceValide(UpsertDispositivoRequest r) =>
+        r.Fasce.Count > 0 && r.Fasce.All(f => f is Domain.Enums.FasciaOraria.F1 or Domain.Enums.FasciaOraria.F2 or Domain.Enums.FasciaOraria.F3);
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Elimina(Guid id)
@@ -69,6 +74,8 @@ public class DispositiviController : ControllerBase
         d.PotenzaWatt = r.PotenzaWatt;
         d.OreUtilizzoGiornaliere = r.OreUtilizzoGiornaliere;
         d.GiorniSettimana = r.GiorniSettimana;
-        d.FasciaPrevalente = r.FasciaPrevalente;
+        d.UsaF1 = r.Fasce.Contains(Domain.Enums.FasciaOraria.F1);
+        d.UsaF2 = r.Fasce.Contains(Domain.Enums.FasciaOraria.F2);
+        d.UsaF3 = r.Fasce.Contains(Domain.Enums.FasciaOraria.F3);
     }
 }

@@ -3,10 +3,16 @@ import { contrattiApi, dispositiviApi, lettureApi, simulazioneApi } from '../api
 import { Contratto, Dispositivo, FasciaOraria, LetturaContatore, PrevisioneBolletta, SimulazioneDispositivi, TipoFornitura } from '../types';
 
 const fasce = [
-  { v: FasciaOraria.F1, l: 'F1 (punta)' },
-  { v: FasciaOraria.F2, l: 'F2 (intermedia)' },
-  { v: FasciaOraria.F3, l: 'F3 (fuori punta)' },
+  { v: FasciaOraria.F1, l: 'F1', desc: 'punta (lun-ven 8-19)' },
+  { v: FasciaOraria.F2, l: 'F2', desc: 'intermedia (sere + sabato)' },
+  { v: FasciaOraria.F3, l: 'F3', desc: 'fuori punta (notti e festivi)' },
 ];
+
+const TUTTE_LE_FASCE = [FasciaOraria.F1, FasciaOraria.F2, FasciaOraria.F3];
+
+/** Etichetta compatta delle fasce di un dispositivo ("Sempre attivo" se tutte e tre). */
+const etichettaFasce = (fs: FasciaOraria[]) =>
+  fs.length === 3 ? 'Sempre attivo' : fs.map((f) => FasciaOraria[f]).join(' + ');
 
 export default function SimulatorePage() {
   const [contratti, setContratti] = useState<Contratto[]>([]);
@@ -17,8 +23,10 @@ export default function SimulatorePage() {
 
   useEffect(() => {
     contrattiApi.lista().then((cs) => {
-      setContratti(cs);
-      const luce = cs.find((c) => c.tipoFornitura === TipoFornitura.Luce);
+      // Nel simulatore contano solo i contratti ATTIVI (lo storico resta nel Profilo).
+      const attivi = cs.filter((c) => c.attivo);
+      setContratti(attivi);
+      const luce = attivi.find((c) => c.tipoFornitura === TipoFornitura.Luce);
       if (luce) setContrattoLuceId(luce.id);
     });
     dispositiviApi.lista().then((ds) => {
@@ -94,7 +102,7 @@ function DispositivoRow({ d, selezionato, onToggle, onDelete }:
       <div className="flex-1">
         <div className="font-medium text-slate-800">{d.nome}</div>
         <div className="text-xs text-slate-500">
-          {d.potenzaWatt} W · {d.oreUtilizzoGiornaliere} h/g · {d.giorniSettimana} gg/sett · {FasciaOraria[d.fasciaPrevalente]}
+          {d.potenzaWatt} W · {d.oreUtilizzoGiornaliere} h/g · {d.giorniSettimana} gg/sett · {etichettaFasce(d.fasce)}
         </div>
         <div className="text-xs font-medium text-brand-600">≈ {d.consumoMensileKwh} kWh/mese</div>
       </div>
@@ -105,12 +113,23 @@ function DispositivoRow({ d, selezionato, onToggle, onDelete }:
 
 function NuovoDispositivo({ onCreated }: { onCreated: (d: Dispositivo) => void }) {
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ nome: '', potenzaWatt: 1000, oreUtilizzoGiornaliere: 1, giorniSettimana: 7, fasciaPrevalente: FasciaOraria.F1 });
+  const [errore, setErrore] = useState('');
+  const [f, setF] = useState({ nome: '', potenzaWatt: 1000, oreUtilizzoGiornaliere: 1, giorniSettimana: 7, fasce: [FasciaOraria.F1] as FasciaOraria[] });
+
+  const toggleFascia = (v: FasciaOraria) =>
+    setF((prev) => ({
+      ...prev,
+      fasce: prev.fasce.includes(v) ? prev.fasce.filter((x) => x !== v) : [...prev.fasce, v],
+    }));
+
+  const sempreAttivo = f.fasce.length === 3;
 
   const salva = async () => {
     if (!f.nome) return;
+    if (f.fasce.length === 0) { setErrore('Seleziona almeno una fascia (o "Sempre attivo").'); return; }
+    setErrore('');
     onCreated(await dispositiviApi.salva(f));
-    setF({ nome: '', potenzaWatt: 1000, oreUtilizzoGiornaliere: 1, giorniSettimana: 7, fasciaPrevalente: FasciaOraria.F1 });
+    setF({ nome: '', potenzaWatt: 1000, oreUtilizzoGiornaliere: 1, giorniSettimana: 7, fasce: [FasciaOraria.F1] });
     setOpen(false);
   };
 
@@ -123,18 +142,39 @@ function NuovoDispositivo({ onCreated }: { onCreated: (d: Dispositivo) => void }
   return (
     <div className="card space-y-2">
       <input className="input" placeholder="Nome (es. Asciugatrice)" value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <label className="text-xs text-slate-500">Watt
           <input className="input" type="number" value={f.potenzaWatt} onChange={(e) => setF({ ...f, potenzaWatt: +e.target.value })} /></label>
         <label className="text-xs text-slate-500">Ore/giorno
           <input className="input" type="number" step="0.5" value={f.oreUtilizzoGiornaliere} onChange={(e) => setF({ ...f, oreUtilizzoGiornaliere: +e.target.value })} /></label>
         <label className="text-xs text-slate-500">Giorni/sett.
           <input className="input" type="number" min={1} max={7} value={f.giorniSettimana} onChange={(e) => setF({ ...f, giorniSettimana: +e.target.value })} /></label>
-        <label className="text-xs text-slate-500">Fascia
-          <select className="input" value={f.fasciaPrevalente} onChange={(e) => setF({ ...f, fasciaPrevalente: +e.target.value })}>
-            {fasce.map((x) => <option key={x.v} value={x.v}>{x.l}</option>)}
-          </select></label>
       </div>
+
+      {/* Fasce di utilizzo: selezione multipla, "Sempre attivo" = tutte e tre. */}
+      <div>
+        <div className="mb-1 text-xs font-medium text-slate-500">Quando lo usi?</div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button"
+            className={`chip ${sempreAttivo ? 'bg-brand-gradient text-white shadow-soft' : 'bg-slate-100 text-slate-600'}`}
+            onClick={() => setF({ ...f, fasce: sempreAttivo ? [FasciaOraria.F1] : [...TUTTE_LE_FASCE] })}>
+            🔄 Sempre attivo
+          </button>
+          {fasce.map((x) => (
+            <button key={x.v} type="button" title={x.desc}
+              className={`chip ${f.fasce.includes(x.v) ? 'bg-brand-100 text-brand-700 ring-1 ring-brand-300' : 'bg-slate-100 text-slate-500'}`}
+              onClick={() => toggleFascia(x.v)}>
+              {x.l}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-[11px] text-slate-400">
+          Il costo è calcolato con la media pesata dei prezzi delle fasce selezionate.
+        </p>
+      </div>
+
+      {errore && <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{errore}</div>}
+
       <div className="flex gap-2">
         <button className="btn-primary flex-1" onClick={salva}>Salva</button>
         <button className="btn-ghost" onClick={() => setOpen(false)}>Annulla</button>

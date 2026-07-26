@@ -94,9 +94,28 @@ export interface Dispositivo {
   potenzaWatt: number;
   oreUtilizzoGiornaliere: number;
   giorniSettimana: number;
-  fasciaPrevalente: FasciaOraria;
+  /** Fasce orarie di utilizzo (una o più; tutte e tre = sempre attivo). */
+  fasce: FasciaOraria[];
   consumoGiornalieroKwh: number;
   consumoMensileKwh: number;
+}
+
+/** Dati estratti da un PDF di contratto per precompilare il form (nulla viene salvato). */
+export interface ContrattoEstratto {
+  tipoFornitura?: TipoFornitura | null;
+  fornitore?: string | null;
+  codicePod?: string | null;
+  codicePdr?: string | null;
+  nomeOfferta?: string | null;
+  tipoTariffa?: TipoTariffa | null;
+  potenzaImpegnataKw?: number | null;
+  prezzoKwhMonorario?: number | null;
+  prezzoKwhF1?: number | null;
+  prezzoKwhF2?: number | null;
+  prezzoKwhF3?: number | null;
+  prezzoSm3?: number | null;
+  quotaFissaMensile?: number | null;
+  confidenza: number;
 }
 
 export interface SimulazioneDispositivi {

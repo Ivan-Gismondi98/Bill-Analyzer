@@ -9,7 +9,7 @@ public record DispositivoDto(
     int PotenzaWatt,
     decimal OreUtilizzoGiornaliere,
     int GiorniSettimana,
-    FasciaOraria FasciaPrevalente,
+    IReadOnlyList<FasciaOraria> Fasce,
     decimal ConsumoGiornalieroKwh,
     decimal ConsumoMensileKwh);
 
@@ -18,4 +18,5 @@ public record UpsertDispositivoRequest(
     [Range(1, 50_000)] int PotenzaWatt,
     [Range(0, 24)] decimal OreUtilizzoGiornaliere,
     [Range(1, 7)] int GiorniSettimana,
-    FasciaOraria FasciaPrevalente);
+    // Fasce orarie di utilizzo: una o più tra F1/F2/F3 ("sempre attivo" = tutte e tre).
+    [Required, MinLength(1)] IReadOnlyList<FasciaOraria> Fasce);

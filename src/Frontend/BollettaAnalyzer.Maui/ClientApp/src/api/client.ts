@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import {
-  AnalisiBolletta, AuthResponse, Bolletta, Contratto, Dispositivo, DocumentoContrattoInfo,
+  AnalisiBolletta, AuthResponse, Bolletta, Contratto, ContrattoEstratto, Dispositivo, DocumentoContrattoInfo,
   FasciaOraria, LetturaContatore, PrevisioneBolletta, SimulazioneDispositivi, TipoFornitura, TipoTariffa, Utente,
 } from '../types';
 import * as mock from './mockData';
@@ -119,6 +119,27 @@ export const contrattiApi = {
       : await http.post<Contratto>('/contratti', payload);
     return data;
   },
+  async elimina(id: string): Promise<void> {
+    if (USE_MOCK) { await delay(); return; }
+    await http.delete(`/contratti/${id}`);
+  },
+  /** Estrae i dati da un PDF di contratto per precompilare il form. Il file NON viene salvato. */
+  async analizza(file: File): Promise<ContrattoEstratto> {
+    if (USE_MOCK) {
+      await delay(700);
+      return {
+        tipoFornitura: TipoFornitura.Luce, fornitore: 'Enel Energia', codicePod: 'IT001E12345678',
+        nomeOfferta: 'Offerta demo', tipoTariffa: TipoTariffa.Multioraria, potenzaImpegnataKw: 3,
+        prezzoKwhF1: 0.17, prezzoKwhF2: 0.15, prezzoKwhF3: 0.12, quotaFissaMensile: 9.5, confidenza: 0.8,
+      };
+    }
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await http.post<ContrattoEstratto>('/contratti/analizza', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
 
   // --- Documento di contratto (PDF cifrato a riposo) ---
   async documentoInfo(id: string): Promise<DocumentoContrattoInfo | null> {
@@ -214,7 +235,7 @@ export const dispositiviApi = {
   },
   async salva(payload: {
     nome: string; potenzaWatt: number; oreUtilizzoGiornaliere: number;
-    giorniSettimana: number; fasciaPrevalente: FasciaOraria;
+    giorniSettimana: number; fasce: FasciaOraria[];
   }, id?: string): Promise<Dispositivo> {
     if (USE_MOCK) {
       await delay();
