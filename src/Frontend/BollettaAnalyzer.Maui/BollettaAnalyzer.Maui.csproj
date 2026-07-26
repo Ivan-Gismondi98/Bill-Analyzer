@@ -31,6 +31,16 @@
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
+  <!--
+    Test di una build Release contro il backend locale in HTTP (telefono via USB
+    con "adb reverse"): compilare con  -p:LocalHttpTest=true  per consentire
+    all'HybridWebView il mixed content, come in debug. La build per il Play Store
+    va prodotta SENZA questa proprietà: lì l'API è in HTTPS e il permesso non serve.
+  -->
+  <PropertyGroup Condition="'$(LocalHttpTest)' == 'true'">
+    <DefineConstants>$(DefineConstants);LOCAL_HTTP_TEST</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Icona app (genera i mipmap appicon/appicon_round referenziati da AndroidManifest.xml)
          e splash screen. Sfondo = gradiente brand, glifo = fulmine bianco. -->

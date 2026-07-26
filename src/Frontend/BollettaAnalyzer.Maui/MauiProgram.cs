@@ -15,12 +15,13 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-#if ANDROID && DEBUG
-        // SOLO in debug: la SPA nell'HybridWebView è servita dall'origine sicura
-        // https://0.0.0.1, quindi le chiamate all'API di sviluppo in HTTP
-        // (http://10.0.2.2:5080) sono "mixed content" e la WebView Android le
-        // blocca a prescindere dai permessi cleartext (ERR_NETWORK dal client).
-        // In release il default sicuro resta attivo: l'API di produzione è in HTTPS.
+#if ANDROID && (DEBUG || LOCAL_HTTP_TEST)
+        // Debug (o Release compilata con -p:LocalHttpTest=true): la SPA nell'
+        // HybridWebView è servita dall'origine sicura https://0.0.0.1, quindi le
+        // chiamate all'API di sviluppo in HTTP (10.0.2.2/localhost) sono "mixed
+        // content" e la WebView Android le blocca a prescindere dai permessi
+        // cleartext (ERR_NETWORK dal client). Nella release per il Play Store
+        // (senza la proprietà) il default sicuro resta attivo: l'API è in HTTPS.
         Microsoft.Maui.Handlers.HybridWebViewHandler.Mapper.AppendToMapping(
             "DevAllowMixedContent", (handler, _) =>
             {
