@@ -1,7 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+    <!--
+      Si compilano solo i target framework effettivamente producibili sulla macchina
+      corrente: iOS e MacCatalyst richiedono macOS (su Windows fallirebbero con errori
+      fuorvianti, es. MSB3491 sulla cache di AssemblyInfo), Windows richiede Windows.
+      Il codice resta multipiattaforma: cambia solo dove viene compilato.
+    -->
+    <TargetFrameworks>net9.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
 
     <OutputType>Exe</OutputType>
