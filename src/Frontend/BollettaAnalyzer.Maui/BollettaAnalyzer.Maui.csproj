@@ -38,10 +38,15 @@
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#6366F1" BaseSize="128,128" />
 
     <!--
-      Il contenuto React buildato finisce in Resources\Raw\wwwroot ed è incluso
-      automaticamente come MauiAsset dall'SDK MAUI, preservando il percorso "wwwroot/…"
-      richiesto dall'HybridWebView (HybridRoot="wwwroot").
+      Asset grezzi: il contenuto React buildato finisce in Resources\Raw\wwwroot.
+      Questa dichiarazione è OBBLIGATORIA: l'SDK MAUI non include Resources\Raw
+      automaticamente. LogicalName rimuove il prefisso "Resources\Raw\", così i file
+      restano raggiungibili come "wwwroot/…" — il percorso atteso dall'HybridWebView
+      con HybridRoot="wwwroot". Qui, fuori da un Target, i metadati %(...) si
+      riferiscono correttamente a ciascun file (dentro un Target attiverebbero
+      il batching di MSBuild).
     -->
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
