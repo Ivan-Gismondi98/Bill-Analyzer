@@ -143,7 +143,25 @@ using (var scope = app.Services.CreateScope())
 }
 
 // --- Pipeline ---
-app.UseExceptionHandler();   // errori inattesi → ProblemDetails, mai stack trace al client
+if (app.Environment.IsDevelopment())
+{
+    // In sviluppo l'errore reale viene restituito nel campo "message", così il
+    // client lo mostra direttamente (il banner rosso dell'app diventa il log).
+    app.UseExceptionHandler(b => b.Run(async ctx =>
+    {
+        var ex = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        var messaggio = ex is null
+            ? "Errore sconosciuto."
+            : $"{ex.GetType().Name}: {ex.Message}" +
+              (ex.InnerException is not null ? $" → {ex.InnerException.GetType().Name}: {ex.InnerException.Message}" : "");
+        ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await ctx.Response.WriteAsJsonAsync(new { message = messaggio });
+    }));
+}
+else
+{
+    app.UseExceptionHandler();   // produzione: ProblemDetails, mai dettagli interni al client
+}
 app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
