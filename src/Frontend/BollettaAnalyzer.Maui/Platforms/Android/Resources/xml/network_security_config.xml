@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Politica di rete dell'app:
+  - HTTP in chiaro consentito SOLO verso l'host di sviluppo (10.0.2.2 = macchina
+    che ospita l'emulatore, localhost per completezza).
+  - Verso qualsiasi altro host vale il default di Android 9+: solo HTTPS.
+  Così il debug con backend locale funziona e il pacchetto di produzione resta
+  conforme alle policy di Google Play senza modifiche al manifest.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

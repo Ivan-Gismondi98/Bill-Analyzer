@@ -246,6 +246,7 @@ inoltro bollette via email, assistente AI, simulatore fotovoltaico) — sono des
 ## 📚 Documentazione
 
 - 🏛️ [`docs/ARCHITETTURA.md`](docs/ARCHITETTURA.md) — scelte architetturali e formule di dominio
+- 🚀 [`docs/PUBBLICAZIONE-PLAY-STORE.md`](docs/PUBBLICAZIONE-PLAY-STORE.md) — guida completa al rilascio (hosting, firma, Play Console)
 - 🎨 [`docs/prototipo-app.html`](docs/prototipo-app.html) — prototipo navigabile di tutte le maschere
 - 🔍 [`falle.md`](falle.md) — audit di sicurezza con stato correzioni + roadmap prodotto
 
