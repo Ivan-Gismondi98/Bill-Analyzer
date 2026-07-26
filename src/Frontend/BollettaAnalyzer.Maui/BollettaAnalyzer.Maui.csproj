@@ -25,9 +25,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Icona app e splash (opzionali: aggiungi i file per abilitarli) -->
-    <MauiIcon Include="Resources\appicon.svg" Condition="Exists('Resources\appicon.svg')" />
-    <MauiSplashScreen Include="Resources\splash.svg" Condition="Exists('Resources\splash.svg')" />
+    <!-- Icona app (genera i mipmap appicon/appicon_round referenziati da AndroidManifest.xml)
+         e splash screen. Sfondo = gradiente brand, glifo = fulmine bianco. -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#6366F1" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#6366F1" BaseSize="128,128" />
 
     <!--
       Il contenuto React buildato finisce in Resources\Raw\wwwroot ed è incluso

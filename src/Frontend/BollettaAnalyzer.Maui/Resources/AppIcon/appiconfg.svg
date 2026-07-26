@@ -1,0 +1,5 @@
+<svg width="456" height="456" viewBox="0 0 456 456" xmlns="http://www.w3.org/2000/svg">
+  <!-- Glifo in primo piano: fulmine bianco, dentro la safe-zone delle adaptive icon
+       (le piattaforme ritagliano il bordo esterno: il glifo sta nel 60% centrale). -->
+  <path d="M262 96 L148 260 H216 L194 360 L308 196 H240 Z" fill="#FFFFFF"/>
+</svg>
