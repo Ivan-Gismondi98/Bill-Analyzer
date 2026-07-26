@@ -9,6 +9,8 @@ using BollettaAnalyzer.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -110,15 +112,28 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // --- Schema DB ---
-// Con migrazioni presenti si usa Migrate (evolvibile); altrimenti EnsureCreated.
+// Con migrazioni presenti si usa Migrate (evolvibile). Altrimenti le tabelle vengono
+// create esplicitamente: EnsureCreated NON basta sui database "condivisi" come
+// Supabase, dove il DB contiene già le tabelle di piattaforma (schemi auth/storage):
+// EF le vedrebbe, concluderebbe che lo schema esiste e non creerebbe mai le tabelle
+// dell'app ("relation Utenti does not exist"). Qui si controlla la presenza delle
+// NOSTRE tabelle, non di tabelle qualsiasi.
 // I dati demo vengono seminati SOLO in sviluppo: mai account noti in produzione.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     if (db.Database.GetMigrations().Any())
+    {
         await db.Database.MigrateAsync();
+    }
     else
-        await db.Database.EnsureCreatedAsync();
+    {
+        var creator = db.GetService<IRelationalDatabaseCreator>();
+        if (!await creator.ExistsAsync())
+            await creator.CreateAsync();          // es. file SQLite nuovo
+        if (!await TabelleAppEsistentiAsync(db))
+            await creator.CreateTablesAsync();    // crea le tabelle dell'app
+    }
 
     if (app.Environment.IsDevelopment())
     {
@@ -160,3 +175,18 @@ app.MapControllers();
 app.MapGet("/", () => Results.Ok(new { app = "Bolletta Analyzer API", status = "ok" }));
 
 app.Run();
+
+// Verifica se le tabelle dell'app esistono già, indipendentemente da altre tabelle
+// presenti nel database (es. quelle interne di Supabase in altri schemi).
+static async Task<bool> TabelleAppEsistentiAsync(AppDbContext db)
+{
+    try
+    {
+        await db.Utenti.AnyAsync();
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+}
