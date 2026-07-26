@@ -46,6 +46,21 @@ Il progetto MAUI ospita un `HybridWebView` che carica la SPA React buildata
 - accesso alle capacità native tramite l'interop JS ↔ C# dell'HybridWebView
   (es. fotocamera, file system) quando servirà.
 
+Due vincoli di build, entrambi conseguenza del fatto che MSBuild fotografa l'elenco degli
+item **al caricamento del progetto**, prima che i target vengano eseguiti:
+
+- gli asset di `Resources\Raw` vanno dichiarati esplicitamente nel csproj
+  (`MauiAsset` con `LogicalName`): non esiste alcuna glob implicita dell'SDK MAUI, e senza
+  quella riga la SPA non entra nel pacchetto e l'`HybridWebView` risponde 404;
+- il client React usa **nomi di file deterministici** (`assets/index.js`, senza hash del
+  contenuto): con i nomi hashati ogni modifica al frontend invaliderebbe la fotografia di
+  MSBuild, che tenterebbe di copiare file non più esistenti (errore XA2001). L'hash serve
+  a invalidare le cache HTTP e qui non è necessario, perché gli asset sono serviti
+  localmente dal pacchetto.
+
+Al primo build su un clone fresco la SPA viene generata *dopo* la fotografia: il csproj
+emette un warning esplicito e basta ricompilare una seconda volta.
+
 Routing con **React Router** (`HashRouter`, robusto per il caricamento da package locale).
 Stato di autenticazione in `AuthContext`; token JWT persistito in `localStorage` e iniettato
 via interceptor Axios.
