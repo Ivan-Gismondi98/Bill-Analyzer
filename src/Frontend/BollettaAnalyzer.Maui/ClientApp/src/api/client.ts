@@ -32,6 +32,30 @@ function risolviBaseUrl(): string {
 
 const BASE_URL = risolviBaseUrl();
 
+/** Base URL effettivamente in uso: esposta per la diagnostica in UI. */
+export const API_BASE_URL = BASE_URL;
+
+/**
+ * Traduce un errore Axios in un messaggio che dice davvero cosa è andato storto.
+ * Senza questo, un backend non raggiungibile e una password sbagliata producono
+ * lo stesso "Operazione non riuscita", che non aiuta a diagnosticare nulla.
+ */
+export function descriviErrore(err: any): string {
+  // Il server ha risposto: l'errore è applicativo (credenziali, validazione, 429…).
+  if (err?.response) {
+    const stato = err.response.status;
+    const messaggio = err.response.data?.message;
+    if (messaggio) return `${messaggio} (HTTP ${stato})`;
+    if (stato === 429) return 'Troppi tentativi di accesso: riprova tra un minuto (HTTP 429).';
+    return `Il server ha risposto con HTTP ${stato}.`;
+  }
+
+  // Nessuna risposta: il backend non è raggiungibile.
+  const causa = err?.code === 'ECONNABORTED' ? 'timeout' : (err?.code ?? 'errore di rete');
+  return `Backend non raggiungibile su ${BASE_URL} (${causa}). ` +
+    'Verifica che l\'API sia avviata e, se sei su emulatore Android, che risponda su 10.0.2.2:5080.';
+}
+
 const TOKEN_KEY = 'ba_token';
 
 export const tokenStore = {
@@ -40,7 +64,9 @@ export const tokenStore = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
-const http: AxiosInstance = axios.create({ baseURL: BASE_URL });
+// Timeout esplicito: senza di esso una richiesta verso un host non raggiungibile
+// può restare appesa a lungo, facendo sembrare l'app bloccata.
+const http: AxiosInstance = axios.create({ baseURL: BASE_URL, timeout: 15_000 });
 http.interceptors.request.use((config) => {
   const token = tokenStore.get();
   if (token) config.headers.Authorization = `Bearer ${token}`;

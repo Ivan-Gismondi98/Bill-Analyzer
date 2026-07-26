@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL, descriviErrore } from '../api/client';
 
 export default function AuthPage() {
   const [params] = useSearchParams();
@@ -24,7 +25,7 @@ export default function AuthPage() {
       else await login(email, password);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Operazione non riuscita. Riprova.');
+      setError(descriviErrore(err));
     } finally {
       setBusy(false);
     }
@@ -67,7 +68,12 @@ export default function AuthPage() {
               <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             </div>
 
-            {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
+            {error && (
+              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <div>{error}</div>
+                <div className="mt-1 text-xs text-red-400">API: {API_BASE_URL}</div>
+              </div>
+            )}
 
             <button className="btn-primary w-full" disabled={busy}>
               {busy ? 'Attendere…' : isRegister ? 'Registrati' : 'Accedi'}
